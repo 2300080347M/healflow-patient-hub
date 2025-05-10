@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import {
   Card,
@@ -106,7 +105,7 @@ const Appointments = () => {
       // In a real app, this would make an API call to cancel the appointment
       const updatedAppointments = appointments.map(appointment =>
         appointment.id === selectedAppointment.id
-          ? { ...appointment, status: 'cancelled' }
+          ? { ...appointment, status: 'cancelled' as const }
           : appointment
       );
       

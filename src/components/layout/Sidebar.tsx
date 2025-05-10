@@ -29,7 +29,8 @@ interface SidebarNavProps {
 }
 
 const SidebarNav: React.FC<SidebarNavProps> = ({ isProvider = false }) => {
-  const { collapsed } = useSidebar();
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
   
   const patientLinks = [
     { to: '/dashboard', icon: Home, label: 'Dashboard' },
@@ -65,7 +66,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isProvider = false }) => {
         "fixed left-0 top-16 z-30 h-[calc(100vh-4rem)] bg-sidebar transition-width duration-300",
         collapsed ? "w-14" : "w-64"
       )}
-      collapsible
+      collapsible="icon"
     >
       <SidebarTrigger className="m-2 self-end lg:hidden" />
 
