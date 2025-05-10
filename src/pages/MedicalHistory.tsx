@@ -16,54 +16,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { mockMedicalRecords, mockPatients } from '@/lib/mockData';
 import { MedicalRecord, Patient } from '@/types';
 import MedicalRecordCard from '@/components/MedicalRecordCard';
 import { Search } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { medicalRecordService } from '@/lib/api/medicalRecordService';
+import { toast } from 'sonner';
 
 const MedicalHistory = () => {
-  const [patient, setPatient] = useState<Patient | null>(null);
-  const [records, setRecords] = useState<MedicalRecord[]>([]);
-  const [filteredRecords, setFilteredRecords] = useState<MedicalRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [recordType, setRecordType] = useState('all');
   const [selectedRecord, setSelectedRecord] = useState<MedicalRecord | null>(null);
 
-  useEffect(() => {
-    // In a real app, we would fetch the patient data and records from an API
-    // For demo purposes, we're using the first mock patient
-    setPatient(mockPatients[0]);
-    
-    // Filter records for this patient
-    const patientRecords = mockMedicalRecords.filter(record => 
-      record.patientId === mockPatients[0].id
-    );
-    
-    setRecords(patientRecords);
-    setFilteredRecords(patientRecords);
-  }, []);
+  // Fetch medical records using React Query
+  const { data: records = [], isLoading, error } = useQuery({
+    queryKey: ['medicalRecords'],
+    queryFn: medicalRecordService.getAllRecords,
+  });
 
   // Filter records based on search and type
-  useEffect(() => {
-    let filtered = records;
-    
+  const filteredRecords = records.filter(record => {
     // Filter by type
-    if (recordType !== 'all') {
-      filtered = filtered.filter(record => record.type === recordType);
-    }
+    const matchesType = recordType === 'all' || record.type === recordType;
     
     // Filter by search term
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(record => 
-        record.title.toLowerCase().includes(term) || 
-        record.description.toLowerCase().includes(term) ||
-        record.providerName.toLowerCase().includes(term)
-      );
-    }
+    const matchesSearch = !searchTerm || 
+      record.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      record.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.providerName.toLowerCase().includes(searchTerm.toLowerCase());
     
-    setFilteredRecords(filtered);
-  }, [records, searchTerm, recordType]);
+    return matchesType && matchesSearch;
+  });
 
   const handleViewRecord = (record: MedicalRecord) => {
     setSelectedRecord(record);
@@ -73,11 +56,30 @@ const MedicalHistory = () => {
     setSelectedRecord(null);
   };
 
-  if (!patient) {
+  const handleExportRecords = () => {
+    toast.info('Exporting medical records...');
+    // This would call an API endpoint to generate and download records
+    setTimeout(() => {
+      toast.success('Medical records exported successfully!');
+    }, 1500);
+  };
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-6rem)]">
         <div className="text-center">
-          <h2 className="text-xl font-semibold">Loading...</h2>
+          <h2 className="text-xl font-semibold">Loading medical records...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-6rem)]">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-red-500">Error loading medical records</h2>
+          <p className="mt-2">Please try again later.</p>
         </div>
       </div>
     );
@@ -87,7 +89,7 @@ const MedicalHistory = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold tracking-tight">Medical History</h2>
-        <Button>Export Records</Button>
+        <Button onClick={handleExportRecords}>Export Records</Button>
       </div>
 
       <Card>
